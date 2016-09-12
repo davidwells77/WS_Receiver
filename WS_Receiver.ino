@@ -17,6 +17,43 @@ void setup() {
   digitalWrite(LED_BUILTIN, HIGH);
 }
 
+void processMessage(char *buf, int buflen, int *temperature, int *humidity, int *pressure, int *heading) {
+
+  int i = 0, last = 0, j = 0;
+
+  //printf("Llamando la funcion processMessage\n");
+  // printf("Esta es una prueba: %s %d\n", prueba, strlen(prueba));
+  for(i = 0; i <= buflen; i++) {
+    if(buf[i] == ';' || buf[i] == '\0') {
+      int k = 0;
+      char *numero = (char *)malloc(((i - last) - 1) * sizeof(char));
+      for(j = last + 2; j < i ; j++) {
+        // printf("%c", prueba[j]);
+        numero[k] = buf[j];
+        k++;
+      }
+      numero[k] = '\0';
+      // printf("\n%d\n", atoi(numero));
+      switch (buf[last]) {
+        case 'T':
+          *temperature = atoi(numero);
+          break;
+        case 'H':
+          *pressure = atoi(numero);
+          break;
+        case 'P':
+          *humidity = atoi(numero);
+          break;
+        case 'D':
+          *heading = atoi(numero);
+          break;
+      }
+      free(numero);
+      last = i + 1;
+    }
+  }
+}
+
 void loop() {
   // put your main code here, to run repeatedly:
   static bool led = true;
@@ -24,6 +61,7 @@ void loop() {
   static unsigned long blinker = currentMillis;
   uint8_t buf[RH_ASK_MAX_MESSAGE_LEN];
   uint8_t buflen = sizeof(buf);
+  static int temperature = 0, humidity = 0,  pressure = 0, heading = 0, RPM = 0;
 
   if(currentMillis - blinker >= 1000) {
     if(led) {
@@ -38,6 +76,6 @@ void loop() {
     //int i;
     // Message with a good checksum received, dump it.
     ask.printBuffer("Got:", buf, buflen);
+    processMessage((char *)buf, (int)buflen, &temperature, &humidity, &pressure, &heading);
   }
 }
-
