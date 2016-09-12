@@ -21,10 +21,8 @@ void processMessage(char *buf, int buflen, int *temperature, int *humidity, int 
 
   int i = 0, last = 0, j = 0;
 
-  //printf("Llamando la funcion processMessage\n");
-  // printf("Esta es una prueba: %s %d\n", prueba, strlen(prueba));
   for(i = 0; i <= buflen; i++) {
-    if(buf[i] == ';' || buf[i] == '\0') {
+    if(buf[i] == ';' || i == buflen) {
       int k = 0;
       char *numero = (char *)malloc(((i - last) - 1) * sizeof(char));
       for(j = last + 2; j < i ; j++) {
@@ -33,16 +31,15 @@ void processMessage(char *buf, int buflen, int *temperature, int *humidity, int 
         k++;
       }
       numero[k] = '\0';
-      // printf("\n%d\n", atoi(numero));
       switch (buf[last]) {
         case 'T':
           *temperature = atoi(numero);
           break;
         case 'H':
-          *pressure = atoi(numero);
+          *humidity = atoi(numero);
           break;
         case 'P':
-          *humidity = atoi(numero);
+          *pressure = atoi(numero);
           break;
         case 'D':
           *heading = atoi(numero);
@@ -73,9 +70,9 @@ void loop() {
     blinker = currentMillis;
   }
   if (ask.recv(buf, &buflen)) {
-    //int i;
-    // Message with a good checksum received, dump it.
-    ask.printBuffer("Got:", buf, buflen);
     processMessage((char *)buf, (int)buflen, &temperature, &humidity, &pressure, &heading);
+    char buffer[255];
+    sprintf(buffer, "%d %d %d %d", temperature, humidity, pressure, heading);
+    Serial.println(buffer);
   }
 }
